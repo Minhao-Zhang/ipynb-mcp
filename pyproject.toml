@@ -1,0 +1,13 @@
+[project]
+name = "ipynb-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=2.5.2",
+    "nbformat>=5.10.4",
+]
+
+[project.scripts]
+ipynb-mcp-tool = "mcp_tool.main:main"

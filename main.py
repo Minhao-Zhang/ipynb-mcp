@@ -5,7 +5,9 @@ from nbformat.v4 import new_notebook, new_code_cell, new_markdown_cell, new_outp
 import re  # For regex to identify tables
 from html import unescape  # For unescaping HTML entities
 from fastmcp import FastMCP, Context
-from typing import Optional  # Import Optional for type hinting
+# Import Optional, Annotated, Literal for type hinting
+from typing import Optional, Annotated, Literal
+from pydantic import Field  # Import Field for argument annotations
 
 # Constants for output formatting
 MAX_TEXT_OUTPUT_LENGTH = 500
@@ -90,7 +92,7 @@ def _format_table_output(html_content, cell_idx, output_idx):
 
 
 @mcp.tool()
-def get_formatted_content(filepath: str):
+def get_formatted_content(filepath: Annotated[str, Field(description="The path of the file to read (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")]):
     """
     Retrieves the formatted content of a Jupyter notebook.
     """
@@ -133,7 +135,13 @@ def get_formatted_content(filepath: str):
 
 
 @mcp.tool()
-def get_full_output(filepath: str, cell_index: int, output_index: int, type_hint: Optional[str] = None):
+def get_full_output(
+    filepath: Annotated[str, Field(description="The path of the file to read (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    cell_index: Annotated[int, Field(description="The 1-based index of the cell.", ge=1)],
+    output_index: Annotated[int, Field(description="The 1-based index of the output within the cell.", ge=1)],
+    type_hint: Annotated[Optional[Literal["text", "image", "table"]], Field(
+        description="Optional hint for the expected output type to retrieve. If not provided, the tool will attempt to infer the best representation.")] = None
+):
     """
     Retrieves the full content of a specific output from a Jupyter notebook cell.
     """
@@ -193,7 +201,12 @@ def get_full_output(filepath: str, cell_index: int, output_index: int, type_hint
 
 
 @mcp.tool()
-def edit_cell(filepath: str, cell_index: int, new_source_content: str):
+def edit_cell(
+    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    cell_index: Annotated[int, Field(description="The 1-based index of the cell to edit.", ge=1)],
+    new_source_content: Annotated[str, Field(
+        description="The new source content for the cell.")]
+):
     """
     Edits the source content of a specific cell in a Jupyter notebook.
     Note: For code cells, existing outputs will be cleared upon editing, as they are considered stale.
@@ -221,7 +234,13 @@ def edit_cell(filepath: str, cell_index: int, new_source_content: str):
 
 
 @mcp.tool()
-def add_cell(filepath: str, cell_index: int, cell_type: str, source_content: str):
+def add_cell(
+    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    cell_index: Annotated[int, Field(description="The 1-based index where the new cell will be inserted. Use 0 to append at the end.", ge=0)],
+    cell_type: Annotated[Literal["code", "markdown"], Field(description="The type of cell to add ('code' or 'markdown').")],
+    source_content: Annotated[str, Field(
+        description="The source content for the new cell.")]
+):
     """
     Adds a new cell (code or markdown) to a Jupyter notebook at a specified index.
     """
@@ -252,7 +271,11 @@ def add_cell(filepath: str, cell_index: int, cell_type: str, source_content: str
 
 
 @mcp.tool()
-def delete_cell(filepath: str, cell_index: int):
+def delete_cell(
+    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    cell_index: Annotated[int, Field(
+        description="The 1-based index of the cell to delete.", ge=1)]
+):
     """
     Deletes a cell from a Jupyter notebook at a specified index.
     """
@@ -276,7 +299,12 @@ def delete_cell(filepath: str, cell_index: int):
 
 
 @mcp.tool()
-def merge_cells(filepath: str, cell_index1: int, cell_index2: int):
+def merge_cells(
+    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    cell_index1: Annotated[int, Field(description="The 1-based index of the first cell to merge.", ge=1)],
+    cell_index2: Annotated[int, Field(
+        description="The 1-based index of the second cell to merge (must be consecutive to cell_index1).", ge=1)]
+):
     """
     Merges two consecutive cells in a Jupyter notebook.
     The content of cell_index2 will be appended to cell_index1, and cell_index2 will be deleted.

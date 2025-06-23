@@ -1,3 +1,4 @@
+import os  # Import the os module for path existence checks
 import json
 import sys
 import nbformat
@@ -19,16 +20,17 @@ mcp = FastMCP(name="JupyterMCPTool")
 
 
 def _read_notebook(filepath) -> tuple[Optional[nbformat.NotebookNode], Optional[str]]:
+    if not os.path.exists(filepath):
+        return None, f"Notebook file not found at {filepath}"
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             return nbformat.read(f, as_version=4), None
-    except FileNotFoundError:
-        return None, f"Notebook file not found at {filepath}"
     except Exception as e:
         return None, f"Error reading notebook: {e}"
 
 
 def _write_notebook(notebook, filepath):
+    # For writing, we don't check os.path.exists because the intention is to create/overwrite.
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
             nbformat.write(notebook, f)
@@ -92,7 +94,7 @@ def _format_table_output(html_content, cell_idx, output_idx):
 
 
 @mcp.tool()
-def get_formatted_content(filepath: Annotated[str, Field(description="The path of the file to read (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")]):
+def get_formatted_content(filepath: Annotated[str, Field(description="The absolute path of the file to read")]):
     """
     Retrieves the formatted content of a Jupyter notebook.
     """
@@ -136,7 +138,7 @@ def get_formatted_content(filepath: Annotated[str, Field(description="The path o
 
 @mcp.tool()
 def get_full_output(
-    filepath: Annotated[str, Field(description="The path of the file to read (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    filepath: Annotated[str, Field(description="The absolute path of the file to read")],
     cell_index: Annotated[int, Field(description="The 1-based index of the cell.", ge=1)],
     output_index: Annotated[int, Field(description="The 1-based index of the output within the cell.", ge=1)],
     type_hint: Annotated[Optional[Literal["text", "image", "table"]], Field(
@@ -202,7 +204,7 @@ def get_full_output(
 
 @mcp.tool()
 def edit_cell(
-    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    filepath: Annotated[str, Field(description="The absolute path of the file to modify")],
     cell_index: Annotated[int, Field(description="The 1-based index of the cell to edit.", ge=1)],
     new_source_content: Annotated[str, Field(
         description="The new source content for the cell.")]
@@ -235,7 +237,7 @@ def edit_cell(
 
 @mcp.tool()
 def add_cell(
-    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    filepath: Annotated[str, Field(description="The absolute path of the file to modify")],
     cell_index: Annotated[int, Field(description="The 1-based index where the new cell will be inserted. Use 0 to append at the end.", ge=0)],
     cell_type: Annotated[Literal["code", "markdown"], Field(description="The type of cell to add ('code' or 'markdown').")],
     source_content: Annotated[str, Field(
@@ -272,7 +274,7 @@ def add_cell(
 
 @mcp.tool()
 def delete_cell(
-    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    filepath: Annotated[str, Field(description="The absolute path of the file to modify")],
     cell_index: Annotated[int, Field(
         description="The 1-based index of the cell to delete.", ge=1)]
 ):
@@ -300,7 +302,7 @@ def delete_cell(
 
 @mcp.tool()
 def merge_cells(
-    filepath: Annotated[str, Field(description="The path of the file to modify (relative to the current workspace directory c:\\Users\\zhang\\Code\\ipynb-mcp)")],
+    filepath: Annotated[str, Field(description="The absolute path of the file to modify")],
     cell_index1: Annotated[int, Field(description="The 1-based index of the first cell to merge.", ge=1)],
     cell_index2: Annotated[int, Field(
         description="The 1-based index of the second cell to merge (must be consecutive to cell_index1).", ge=1)]

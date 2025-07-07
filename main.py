@@ -11,7 +11,7 @@ from typing import Optional, Annotated, Literal
 from pydantic import Field  # Import Field for argument annotations
 
 # Constants for output formatting
-MAX_TEXT_OUTPUT_LENGTH = 500
+MAX_TEXT_OUTPUT_LENGTH = 5000
 MAX_TABLE_ROWS = 5
 TRUNCATION_MARKER = "[TRUNCATED]"
 HINT_FULL_OUTPUT = "Use `get_full_output` for full content."
